@@ -208,6 +208,14 @@ class HomeInterface(ScrollArea):
             routeKey="basicInputInterface",
             index=26
         )
+        basicInputView.addSampleCard(
+            icon=":/gallery/images/controls/InputValidation.png",
+            title="Form",
+            content=self.tr(
+                "A field layout with helper text, validation state and submit actions."),
+            routeKey="basicInputInterface",
+            index=30
+        )
         self.vBoxLayout.addWidget(basicInputView)
 
         # date time samples
@@ -391,6 +399,14 @@ class HomeInterface(ScrollArea):
             content=self.tr(
                 "An non-intrusive Ul to display notifications or bring focus to an area."),
             routeKey="statusInfoInterface",
+            index=6
+        )
+        stateInfoView.addSampleCard(
+            icon=":/gallery/images/controls/InputValidation.png",
+            title="StateWidget",
+            content=self.tr(
+                "A reusable presentation for empty, error and loading states."),
+            routeKey="statusInfoInterface",
             index=3
         )
         stateInfoView.addSampleCard(
@@ -399,7 +415,7 @@ class HomeInterface(ScrollArea):
             content=self.tr(
                 "An inline message to display app-wide status change information."),
             routeKey="statusInfoInterface",
-            index=4
+            index=7
         )
         stateInfoView.addSampleCard(
             icon=":/gallery/images/controls/ProgressBar.png",
@@ -407,7 +423,7 @@ class HomeInterface(ScrollArea):
             content=self.tr(
                 "Shows the apps progress on a task, or that the app is performing ongoing work that doesn't block user interaction."),
             routeKey="statusInfoInterface",
-            index=8
+            index=11
         )
         stateInfoView.addSampleCard(
             icon=":/gallery/images/controls/ProgressRing.png",
@@ -415,7 +431,7 @@ class HomeInterface(ScrollArea):
             content=self.tr(
                 "Shows the apps progress on a task, or that the app is performing ongoing work that doesn't block user interaction."),
             routeKey="statusInfoInterface",
-            index=10
+            index=13
         )
         stateInfoView.addSampleCard(
             icon=":/gallery/images/controls/ToolTip.png",
@@ -480,12 +496,28 @@ class HomeInterface(ScrollArea):
             index=1
         )
         collectionView.addSampleCard(
+            icon=":/gallery/images/controls/DataGrid.png",
+            title="DataGrid",
+            content=self.tr(
+                "A searchable, paginated table surface for production data workflows."),
+            routeKey="viewInterface",
+            index=2
+        )
+        collectionView.addSampleCard(
+            icon=":/gallery/images/controls/TabView.png",
+            title="Workspace",
+            content=self.tr(
+                "A split tab workspace for model metrics, datasets and analysis views."),
+            routeKey="viewInterface",
+            index=3
+        )
+        collectionView.addSampleCard(
             icon=":/gallery/images/controls/TreeView.png",
             title="TreeView",
             content=self.tr(
                 "The TreeView control is a hierarchical list pattern with expanding and collapsing nodes that contain nested items."),
             routeKey="viewInterface",
-            index=2
+            index=4
         )
         collectionView.addSampleCard(
             icon=":/gallery/images/controls/FlipView.png",
@@ -493,6 +525,6 @@ class HomeInterface(ScrollArea):
             content=self.tr(
                 "Presents a collection of items that the user can flip through,one item at a time."),
             routeKey="viewInterface",
-            index=4
+            index=6
         )
         self.vBoxLayout.addWidget(collectionView)

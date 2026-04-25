@@ -23,6 +23,8 @@ from .status_info_interface import StatusInfoInterface
 from .setting_interface import SettingInterface
 from .text_interface import TextInterface
 from .view_interface import ViewInterface
+from .production_interface import ProductionInterface
+from .analysis_interface import AnalysisInterface
 from ..common.config import ZH_SUPPORT_URL, EN_SUPPORT_URL, cfg
 from ..common.icon import Icon
 from ..common.signal_bus import signalBus
@@ -54,6 +56,8 @@ class MainWindow(FluentWindow):
         self.settingInterface = SettingInterface(self)
         self.textInterface = TextInterface(self)
         self.viewInterface = ViewInterface(self)
+        self.productionInterface = ProductionInterface(self)
+        self.analysisInterface = AnalysisInterface(self)
 
         # enable acrylic effect
         self.navigationInterface.setAcrylicEnabled(True)
@@ -91,6 +95,8 @@ class MainWindow(FluentWindow):
         self.addSubInterface(self.statusInfoInterface, FIF.CHAT, t.statusInfo, pos)
         self.addSubInterface(self.textInterface, Icon.TEXT, t.text, pos)
         self.addSubInterface(self.viewInterface, Icon.GRID, t.view, pos)
+        self.addSubInterface(self.productionInterface, FIF.DEVELOPER_TOOLS, self.tr('Production'), pos)
+        self.addSubInterface(self.analysisInterface, FIF.ROBOT, self.tr('Analysis'), pos)
 
         # add custom widget to bottom
         self.navigationInterface.addItem(

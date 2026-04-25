@@ -23,6 +23,12 @@ test.py
 # 忽略配置文件
 config.json
 
+# 忽略 AI agent workflow files
+AGENTS.md
+.codex-workflow.md
+.codex-agents/
+.codex-memory/
+
 # 忽略下载文件夹
 download/
 

@@ -1,10 +1,12 @@
 # coding:utf-8
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout
 from qfluentwidgets import (StateToolTip, InfoBadge, ToolTipFilter, PushButton, PixmapLabel,
                             InfoBar, InfoBarIcon, FluentIcon, InfoBarPosition, ProgressBar,
-                            IndeterminateProgressBar, SpinBox, ProgressRing, IndeterminateProgressRing)
+                            IndeterminateProgressBar, SpinBox, ProgressRing, IndeterminateProgressRing,
+                            EmptyStateWidget, ErrorStateWidget, SkeletonWidget, LoadingOverlay,
+                            SimpleCardWidget)
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator
@@ -53,6 +55,32 @@ class StatusInfoInterface(GalleryInterface):
             self.tr('A label with a ToolTip'),
             label,
             'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/status_info/tool_tip/demo.py'
+        )
+
+        # state widgets
+        stateWidget = StateWidgetDemo(self)
+        self.addExampleCard(
+            self.tr('Empty and error states'),
+            stateWidget,
+            'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/status_info/state_widget/demo.py',
+            stretch=1
+        )
+
+        skeleton = SkeletonWidget(self)
+        skeleton.setFixedHeight(110)
+        self.addExampleCard(
+            self.tr('A skeleton loading placeholder'),
+            skeleton,
+            'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/status_info/state_widget/demo.py',
+            stretch=1
+        )
+
+        loadingWidget = LoadingOverlayDemo(self)
+        self.addExampleCard(
+            self.tr('A loading overlay'),
+            loadingWidget,
+            'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/status_info/state_widget/demo.py',
+            stretch=1
         )
 
         # info badge
@@ -295,3 +323,50 @@ class ProgressWidget(QWidget):
         hBoxLayout.setContentsMargins(0, 0, 0, 0)
 
         self.spinBox.setValue(0)
+
+
+class StateWidgetDemo(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        hBoxLayout = QHBoxLayout(self)
+
+        emptyState = EmptyStateWidget(
+            self.tr('No files found'),
+            self.tr('Try changing the filter or creating a new item.'),
+            self
+        )
+        emptyState.setIcon(FluentIcon.SEARCH)
+        emptyState.setActionText(self.tr('Create item'))
+
+        errorState = ErrorStateWidget(
+            self.tr('Could not load data'),
+            self.tr('Check your connection and try again.'),
+            self
+        )
+        errorState.setActionText(self.tr('Retry'))
+
+        hBoxLayout.addWidget(emptyState)
+        hBoxLayout.addWidget(errorState)
+        hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        hBoxLayout.setSpacing(12)
+
+
+class LoadingOverlayDemo(SimpleCardWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setFixedHeight(180)
+        self.button = PushButton(self.tr('Show overlay'), self)
+        self.overlay = LoadingOverlay(self)
+        self.overlay.setTitle(self.tr('Refreshing'))
+        self.overlay.setContent(self.tr('Loading the latest records'))
+
+        self.vBoxLayout = QVBoxLayout(self)
+        self.vBoxLayout.addWidget(self.button, 0, Qt.AlignCenter)
+        self.vBoxLayout.setContentsMargins(24, 24, 24, 24)
+        self.button.clicked.connect(self.showOverlay)
+
+    def showOverlay(self):
+        self.overlay.setLoading(True)
+        QTimer.singleShot(2200, lambda: self.overlay.setLoading(False))

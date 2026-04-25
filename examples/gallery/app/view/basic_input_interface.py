@@ -7,7 +7,7 @@ from qfluentwidgets import (Action, DropDownPushButton, DropDownToolButton, Push
                             PrimarySplitPushButton, PrimaryDropDownPushButton, PrimaryToolButton, PrimaryDropDownToolButton,
                             ToggleToolButton, TransparentDropDownPushButton, TransparentPushButton, TransparentToggleToolButton,
                             TransparentTogglePushButton, TransparentDropDownToolButton, TransparentToolButton,
-                            PillPushButton, PillToolButton)
+                            PillPushButton, PillToolButton, FormWidget, FormSection, FormField, LineEdit)
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator
@@ -302,6 +302,14 @@ class BasicInputInterface(GalleryInterface):
             'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/master/examples/basic_input/button/demo.py'
         )
 
+        # form
+        self.addExampleCard(
+            self.tr('A form with validation state'),
+            FormDemo(self),
+            'https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/basic_input/form/demo.py',
+            stretch=1
+        )
+
 
     def onSwitchCheckedChanged(self, isChecked):
         if isChecked:
@@ -318,3 +326,36 @@ class BasicInputInterface(GalleryInterface):
             Action(self.tr('Sticky Fingers'), triggered=lambda c=True, b=button: b.setText(self.tr('Sticky Fingers'))),
         ])
         return menu
+
+
+class FormDemo(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.form = FormWidget(self)
+        self.form.submitButton.setText(self.tr('Save'))
+        self.form.cancelButton.hide()
+
+        section = FormSection(self.tr('Account'), self.tr('Validate required fields before submitting.'), self)
+
+        nameEdit = LineEdit(self)
+        nameEdit.setPlaceholderText(self.tr('Display name'))
+        nameEdit.setClearButtonEnabled(True)
+        section.addField(FormField(self.tr('Name'), nameEdit, required=True, parent=self))
+
+        emailEdit = LineEdit(self)
+        emailEdit.setPlaceholderText('name@example.com')
+        emailField = FormField(self.tr('Email'), emailEdit, required=True, parent=self)
+        emailField.addValidator(lambda value: '@' in value or self.tr('Enter a valid email address.'))
+        section.addField(emailField)
+
+        roleCombo = ComboBox(self)
+        roleCombo.addItems([self.tr('Designer'), self.tr('Engineer'), self.tr('Product manager')])
+        roleCombo.setMinimumWidth(220)
+        section.addField(FormField(self.tr('Role'), roleCombo, parent=self))
+
+        self.form.addSection(section)
+
+        self.vBoxLayout = QVBoxLayout(self)
+        self.vBoxLayout.addWidget(self.form)
+        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)

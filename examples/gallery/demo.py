@@ -11,6 +11,26 @@ from app.common.config import cfg
 from app.view.main_window import MainWindow
 
 
+def setQtPlatformFallback():
+    """Avoid selecting Wayland when no Wayland display is available."""
+    if sys.platform != "linux":
+        return
+
+    platform = os.environ.get("QT_QPA_PLATFORM", "").lower()
+    if platform and platform != "wayland":
+        return
+
+    if os.environ.get("WAYLAND_DISPLAY"):
+        return
+
+    if os.environ.get("DISPLAY"):
+        os.environ["QT_QPA_PLATFORM"] = "xcb"
+    elif platform == "wayland":
+        os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+
+setQtPlatformFallback()
+
 # enable dpi scale
 if cfg.get(cfg.dpiScale) != "Auto":
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"

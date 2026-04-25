@@ -1,7 +1,10 @@
 # coding:utf-8
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QTreeWidgetItem, QHBoxLayout, QTreeWidgetItemIterator, QTableWidgetItem, QListWidgetItem
-from qfluentwidgets import TreeWidget, TableWidget, ListWidget, HorizontalFlipView
+from PySide6.QtWidgets import (QFrame, QTreeWidgetItem, QHBoxLayout, QVBoxLayout, QTreeWidgetItemIterator,
+                               QTableWidgetItem, QListWidgetItem, QWidget)
+from qfluentwidgets import (TreeWidget, TableWidget, ListWidget, HorizontalFlipView, DataGridWidget,
+                            InfoBar, InfoBarPosition, WorkspaceTabWidget, ChartWidget, ChartType,
+                            MetricCard, FluentIcon, BodyLabel)
 
 from .gallery_interface import GalleryInterface
 from ..common.translator import Translator
@@ -32,6 +35,22 @@ class ViewInterface(GalleryInterface):
             title=self.tr('A simple TableView'),
             widget=TableFrame(self),
             sourcePath='https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/view/table_view/demo.py'
+        )
+
+        # data grid
+        self.addExampleCard(
+            title=self.tr('A searchable DataGrid'),
+            widget=DataGridFrame(self),
+            sourcePath='https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/view/data_grid/demo.py',
+            stretch=1
+        )
+
+        # analysis workspace
+        self.addExampleCard(
+            title=self.tr('A model analysis workspace'),
+            widget=AnalysisWorkspaceFrame(self),
+            sourcePath='https://github.com/zhiyiYo/PyQt-Fluent-Widgets/blob/PySide6/examples/view/analysis_workspace/demo.py',
+            stretch=1
         )
 
         # tree view
@@ -204,3 +223,133 @@ class TableFrame(TableWidget):
 
         self.setFixedSize(625, 440)
         self.resizeColumnsToContents()
+
+
+class DataGridFrame(DataGridWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(440)
+        self.setColumns([
+            ('title', self.tr('Title')),
+            ('artist', self.tr('Artist')),
+            ('album', self.tr('Album')),
+            ('year', self.tr('Year')),
+            ('duration', self.tr('Duration')),
+        ])
+        self.setRows(self.songInfos())
+        self.setRowActions([(self.tr('Open'), self.openRow)])
+
+    def openRow(self, row):
+        InfoBar.info(
+            title=row['title'],
+            content=self.tr('Opening {0} by {1}.').format(row['title'], row['artist']),
+            isClosable=True,
+            position=InfoBarPosition.TOP_RIGHT,
+            duration=2000,
+            parent=self.window()
+        )
+
+    def songInfos(self):
+        rows = [
+            ('かばん', 'aiko', 'かばん', '2004', '5:04'),
+            ('爱你', '王心凌', '爱你', '2004', '3:39'),
+            ('星のない世界', 'aiko', '星のない世界/横顔', '2007', '5:30'),
+            ('横顔', 'aiko', '星のない世界/横顔', '2007', '5:06'),
+            ('秘密', 'aiko', '秘密', '2008', '6:27'),
+            ('シアワセ', 'aiko', '秘密', '2008', '5:25'),
+            ('二人', 'aiko', '二人', '2008', '5:00'),
+            ('スパークル', 'RADWIMPS', '君の名は。', '2016', '8:54'),
+            ('なんでもないや', 'RADWIMPS', '君の名は。', '2016', '3:16'),
+            ('前前前世', 'RADWIMPS', '人間開花', '2016', '4:35'),
+            ('恋をしたのは', 'aiko', '恋をしたのは', '2016', '6:02'),
+            ('夏バテ', 'aiko', '恋をしたのは', '2016', '4:41'),
+            ('もっと', 'aiko', 'もっと', '2016', '4:50'),
+            ('問題集', 'aiko', 'もっと', '2016', '4:18'),
+            ('半袖', 'aiko', 'もっと', '2016', '5:50'),
+        ]
+        rows = rows + rows
+        return [
+            {'title': title, 'artist': artist, 'album': album, 'year': year, 'duration': duration}
+            for title, artist, album, year, duration in rows
+        ]
+
+
+class AnalysisWorkspaceFrame(WorkspaceTabWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(460)
+        self.addTab(MetricsPage(self), self.tr('Metrics'), FluentIcon.VIEW)
+        self.addTab(DatasetPage(self), self.tr('Dataset'), FluentIcon.DOCUMENT)
+        self.addTab(ConfusionPage(self), self.tr('Confusion'), FluentIcon.APPLICATION, pane=1)
+        self.setTabDirty(0, True)
+
+
+class MetricsPage(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        vBoxLayout = QVBoxLayout(self)
+        cardLayout = QHBoxLayout()
+
+        for title, value, caption in [
+            (self.tr('Accuracy'), '94.8%', self.tr('+1.6%')),
+            (self.tr('F1 Score'), '0.923', self.tr('macro avg')),
+            (self.tr('Latency'), '18 ms', self.tr('p95')),
+        ]:
+            cardLayout.addWidget(MetricCard(title, value, caption, self))
+
+        chart = ChartWidget(self)
+        chart.setTitle(self.tr('Training loss'))
+        chart.setAxisLabels(self.tr('Epoch'), self.tr('Loss'))
+        chart.setCategories([str(i) for i in range(1, 9)])
+        chart.setSeries(self.tr('train'), [0.84, 0.62, 0.48, 0.39, 0.33, 0.29, 0.25, 0.23])
+        chart.addSeries(self.tr('validation'), [0.88, 0.68, 0.54, 0.45, 0.40, 0.36, 0.34, 0.32])
+
+        vBoxLayout.addLayout(cardLayout)
+        vBoxLayout.addWidget(chart, 1)
+        vBoxLayout.setContentsMargins(0, 0, 0, 0)
+
+
+class DatasetPage(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        grid = DataGridWidget(self)
+        grid.setColumns([
+            ('feature', self.tr('Feature')),
+            ('type', self.tr('Type')),
+            ('missing', self.tr('Missing')),
+            ('importance', self.tr('Importance')),
+        ])
+        grid.setRows([
+            {'feature': 'age', 'type': 'numeric', 'missing': '0.4%', 'importance': '0.18'},
+            {'feature': 'income', 'type': 'numeric', 'missing': '2.1%', 'importance': '0.27'},
+            {'feature': 'region', 'type': 'category', 'missing': '0.0%', 'importance': '0.09'},
+            {'feature': 'tenure_days', 'type': 'numeric', 'missing': '0.0%', 'importance': '0.22'},
+        ])
+
+        vBoxLayout = QVBoxLayout(self)
+        vBoxLayout.addWidget(grid)
+        vBoxLayout.setContentsMargins(0, 0, 0, 0)
+
+
+class ConfusionPage(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        chart = ChartWidget(self)
+        chart.setChartType(ChartType.BAR)
+        chart.setTitle(self.tr('Prediction counts'))
+        chart.setCategories([self.tr('Class A'), self.tr('Class B'), self.tr('Class C')])
+        chart.setSeries(self.tr('correct'), [420, 318, 280])
+        chart.addSeries(self.tr('incorrect'), [28, 36, 42])
+
+        label = BodyLabel(self.tr('Split tabs keep model metrics and error analysis side by side.'), self)
+        label.setWordWrap(True)
+
+        vBoxLayout = QVBoxLayout(self)
+        vBoxLayout.addWidget(label)
+        vBoxLayout.addWidget(chart, 1)
+        vBoxLayout.setContentsMargins(0, 0, 0, 0)
