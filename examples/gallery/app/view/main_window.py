@@ -1,8 +1,9 @@
 # coding: utf-8
 from typing import List
-from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl, QSize, QTimer
-from PySide6.QtGui import QIcon, QDesktopServices, QColor
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QFrame, QWidget
+from PySide6.QtCore import Qt, Signal, QEasingCurve, QUrl, QSize, QTimer, QDateTime
+from PySide6.QtGui import QIcon, QDesktopServices, QColor, QShortcut, QKeySequence
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QFrame, QWidget, QVBoxLayout,
+                               QTextBrowser, QPlainTextEdit, QPushButton, QLabel)
 
 from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen, SystemThemeListener, isDarkTheme)
@@ -62,6 +63,12 @@ class MainWindow(FluentWindow):
         # enable acrylic effect
         self.navigationInterface.setAcrylicEnabled(True)
 
+        self.chatPanel = CopilotChatPanel(self)
+        self.chatPanel.hide()
+        self.widgetLayout.addWidget(self.chatPanel)
+        self.toggleChatShortcut = QShortcut(QKeySequence("Ctrl+Shift+I"), self)
+        self.toggleChatShortcut.activated.connect(self.toggleCopilotChat)
+
         self.connectSignalToSlot()
 
         # add items to navigation interface
@@ -108,6 +115,17 @@ class MainWindow(FluentWindow):
             tooltip=t.price,
             position=NavigationItemPosition.BOTTOM
         )
+
+        self.navigationInterface.addItem(
+            routeKey='copilotChat',
+            icon=FIF.ROBOT,
+            text=self.tr('AI Chat'),
+            onClick=self.toggleCopilotChat,
+            selectable=False,
+            tooltip=self.tr('AI Chat (Ctrl+Shift+I)'),
+            position=NavigationItemPosition.BOTTOM
+        )
+
         self.addSubInterface(
             self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
@@ -161,3 +179,95 @@ class MainWindow(FluentWindow):
             if w.objectName() == routeKey:
                 self.stackedWidget.setCurrentWidget(w, False)
                 w.scrollToCard(index)
+
+    def toggleCopilotChat(self):
+        if self.chatPanel.isHidden():
+            self.chatPanel.show()
+            self.chatPanel.addSystemTip(self.stackedWidget.currentWidget())
+            return
+
+        self.chatPanel.hide()
+
+
+class CopilotChatPanel(QFrame):
+    """A lightweight copilot-style chat panel for the gallery demo."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setObjectName('copilotChatPanel')
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(420)
+        self.setFixedWidth(340)
+
+        self.vBoxLayout = QVBoxLayout(self)
+        self.vBoxLayout.setContentsMargins(12, 12, 12, 12)
+        self.vBoxLayout.setSpacing(10)
+
+        headerLabel = QLabel(self.tr('Copilot Chat'), self)
+        headerLabel.setStyleSheet('font-size: 16px; font-weight: 600;')
+
+        self.chatHistory = QTextBrowser(self)
+        self.chatHistory.setOpenExternalLinks(True)
+
+        self.promptEdit = QPlainTextEdit(self)
+        self.promptEdit.setPlaceholderText(self.tr('Ask about the current page, controls, or example usage...'))
+        self.promptEdit.setFixedHeight(92)
+
+        self.sendButton = QPushButton(self.tr('Send'), self)
+        self.clearButton = QPushButton(self.tr('Clear'), self)
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.clearButton)
+        buttonLayout.addStretch(1)
+        buttonLayout.addWidget(self.sendButton)
+
+        self.vBoxLayout.addWidget(headerLabel)
+        self.vBoxLayout.addWidget(self.chatHistory, 1)
+        self.vBoxLayout.addWidget(self.promptEdit)
+        self.vBoxLayout.addLayout(buttonLayout)
+
+        self.sendButton.clicked.connect(self.sendMessage)
+        self.clearButton.clicked.connect(self.chatHistory.clear)
+        self.promptEdit.textChanged.connect(self._syncSendButtonState)
+        self._syncSendButtonState()
+
+        self._appendMessage(self.tr('assistant'), self.tr('Hi! I can explain widgets and suggest what to explore next.'))
+
+    def addSystemTip(self, currentInterface: QWidget):
+        if not currentInterface:
+            return
+
+        route = currentInterface.objectName().replace('Interface', '')
+        tip = self.tr('You are browsing the <b>{}</b> section. Ask me for guided examples.').format(route)
+        self._appendMessage(self.tr('system'), tip)
+
+    def _syncSendButtonState(self):
+        self.sendButton.setEnabled(bool(self.promptEdit.toPlainText().strip()))
+
+    def sendMessage(self):
+        content = self.promptEdit.toPlainText().strip()
+        if not content:
+            return
+
+        self._appendMessage(self.tr('you'), content)
+        self.promptEdit.clear()
+        self._appendMessage(self.tr('assistant'), self._buildAssistantReply(content))
+
+    def _buildAssistantReply(self, content: str) -> str:
+        question = content.lower()
+        current = self.window().stackedWidget.currentWidget()
+        currentName = current.objectName().replace('Interface', '') if current else self.tr('home')
+
+        if 'layout' in question:
+            return self.tr('Try opening the Layout section. It shows spacing, containers and page composition patterns.')
+
+        if 'dialog' in question or 'popup' in question:
+            return self.tr('The Dialogs page demonstrates message boxes, flyouts and teaching tips with Fluent style.')
+
+        if 'next' in question or 'what should i do' in question:
+            return self.tr('Since you are in <b>{}</b>, compare it with Production and Analysis to see real-world patterns.').format(currentName)
+
+        return self.tr('I can help with widget discovery, navigation and demo walkthroughs. You are currently in <b>{}</b>.').format(currentName)
+
+    def _appendMessage(self, role: str, content: str):
+        timestamp = QDateTime.currentDateTime().toString('HH:mm')
+        self.chatHistory.append(f"<p><b>{role}</b> <span style='color:gray'>[{timestamp}]</span><br>{content}</p>")
